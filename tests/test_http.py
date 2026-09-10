@@ -51,3 +51,17 @@ def test_interaction_message_response_params_rejects_too_many_files():
         interaction_message_response_params(type=4, content='test', files=files)
 
 
+def test_handle_message_parameters_rejects_too_many_attachments():
+    attachments = [make_file(index) for index in range(11)]
+
+    with pytest.raises(ValueError, match='attachments has a maximum of 10 elements'):
+        handle_message_parameters(content='test', attachments=attachments)
+
+
+def test_interaction_message_response_params_rejects_too_many_attachments():
+    attachments = [make_file(index) for index in range(11)]
+
+    with pytest.raises(ValueError, match='attachments has a maximum of 10 elements'):
+        interaction_message_response_params(type=4, content='test', attachments=attachments)
+
+

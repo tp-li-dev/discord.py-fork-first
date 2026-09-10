@@ -571,6 +571,9 @@ def interaction_message_response_params(
     if attachments is not MISSING and files is not MISSING:
         raise TypeError('Cannot mix attachments and files keyword arguments.')
 
+    if attachments is not MISSING and len(attachments) > 10:
+        raise ValueError('attachments has a maximum of 10 elements.')
+
     if files is not MISSING and len(files) > 10:
         raise ValueError('files has a maximum of 10 elements.')
 
