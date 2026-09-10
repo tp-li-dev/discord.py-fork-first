@@ -1381,8 +1381,7 @@ class PartialMessage(Hashable):
         HTTPException
             Editing the message failed.
         Forbidden
-            Tried to suppress a message without permissions or
-            edited a message's content or embed that isn't yours.
+            Edited a message's content or embed that isn't yours.
         NotFound
             This message does not exist.
         TypeError
