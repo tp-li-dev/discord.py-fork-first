@@ -397,7 +397,8 @@ class DiscordWebSocket:
             # due to resume_gateway_url, then fallback to the older default
             # See #10511
             if e.status >= 500 and gateway != cls.DEFAULT_GATEWAY:
-                socket = await client.http.ws_connect(str(cls.DEFAULT_GATEWAY))
+                fallback_url = cls.DEFAULT_GATEWAY.with_query(url.query)
+                socket = await client.http.ws_connect(str(fallback_url))
                 gateway = cls.DEFAULT_GATEWAY
                 resume = False
             else:
