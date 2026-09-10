@@ -35,17 +35,19 @@ To get voice support, you should use ``discord.py[voice]`` instead of ``discord.
 
     python3 -m pip install -U discord.py[voice]
 
+The ``voice`` extra installs the Python dependencies required for voice support:
+`PyNaCl <https://pypi.org/project/PyNaCl/>`_ and `davey <https://pypi.org/project/davey/>`_.
+
 On Linux environments, installing voice requires getting the following dependencies:
 
 - `libffi <https://github.com/libffi/libffi>`_
-- `libnacl <https://github.com/saltstack/libnacl>`_
 - `python3-dev <https://packages.debian.org/python3-dev>`_
 
 For a Debian-based system, the following command will get these dependencies:
 
 .. code-block:: shell
 
-    $ apt install libffi-dev libnacl-dev python3-dev
+    $ apt install libffi-dev python3-dev
 
 Remember to check your permissions!
 

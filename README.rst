@@ -66,6 +66,7 @@ Optional Packages
 ~~~~~~~~~~~~~~~~~~
 
 * `PyNaCl <https://pypi.org/project/PyNaCl/>`__ (for voice support)
+* `davey <https://pypi.org/project/davey/>`__ (for voice support)
 
 Please note that when installing voice support on Linux, you must install the following packages via your favourite package manager (e.g. ``apt``, ``dnf``, etc) before running the above commands:
 
