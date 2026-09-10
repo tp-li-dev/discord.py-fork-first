@@ -1143,6 +1143,9 @@ class Greedy(List[T]):
     def __or__(self, value: Any) -> Any:
         return Union[self, value]
 
+    def __ror__(self, value: Any) -> Any:
+        return Union[value, self]
+
     def __class_getitem__(cls, params: Union[Tuple[T], T]) -> Greedy[T]:
         if not isinstance(params, tuple):
             params = (params,)
