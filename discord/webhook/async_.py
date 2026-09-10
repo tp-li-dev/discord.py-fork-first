@@ -165,6 +165,7 @@ class AsyncWebhookAdapter:
         data: Optional[Union[Dict[str, Any], str]] = None
         method = route.method
         url = route.url
+        log_url = route._url_for_log()
         webhook_id = route.webhook_id
 
         async with AsyncDeferredLock(lock) as lock:
@@ -186,7 +187,7 @@ class AsyncWebhookAdapter:
                             'Webhook ID %s with %s %s has returned status code %s',
                             webhook_id,
                             method,
-                            url,
+                            log_url,
                             response.status,
                         )
                         data = await json_or_text(response)

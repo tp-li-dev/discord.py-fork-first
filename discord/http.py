@@ -329,6 +329,13 @@ class Route:
         self.webhook_id: Optional[Snowflake] = parameters.get('webhook_id')
         self.webhook_token: Optional[str] = parameters.get('webhook_token')
 
+    def _url_for_log(self) -> str:
+        if self.webhook_token is None:
+            return self.url
+
+        token = _uriquote(self.webhook_token, safe='')
+        return self.url.replace(token, '<redacted>')
+
     @property
     def key(self) -> str:
         """The bucket key is used to represent the route in various mappings."""

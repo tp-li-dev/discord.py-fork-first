@@ -149,6 +149,7 @@ class WebhookAdapter:
         file_data: Optional[Dict[str, Any]] = None
         method = route.method
         url = route.url
+        log_url = route._url_for_log()
         webhook_id = route.webhook_id
 
         with DeferredLock(lock) as lock:
@@ -173,7 +174,7 @@ class WebhookAdapter:
                             'Webhook ID %s with %s %s has returned status code %s',
                             webhook_id,
                             method,
-                            url,
+                            log_url,
                             response.status_code,
                         )
                         response.encoding = 'utf-8'
