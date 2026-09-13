@@ -606,6 +606,7 @@ class HTTPClient:
     ) -> Any:
         method = route.method
         url = route.url
+        log_url = route._url_for_log()
         route_key = route.key
 
         bucket_hash = None
@@ -667,7 +668,17 @@ class HTTPClient:
 
                 try:
                     async with self.__session.request(method, url, **kwargs) as response:
-                        _log.debug('%s %s with %s has returned %s', method, url, kwargs.get('data'), response.status)
+                        if _log.isEnabledFor(logging.DEBUG):
+                            request_data = kwargs.get('data')
+                            _log.debug(
+                                '%s %s with %s has returned %s',
+                                method,
+                                log_url,
+                                utils._redact_sensitive_data(
+                                    request_data, serialized=isinstance(request_data, (str, bytes, bytearray))
+                                ),
+                                response.status,
+                            )
 
                         # even errors have text involved in them so this is safe to call
                         data = await json_or_text(response)
@@ -714,7 +725,13 @@ class HTTPClient:
 
                         # the request was successful so just return the text/json
                         if 300 > response.status >= 200:
-                            _log.debug('%s %s has received %s', method, url, data)
+                            if _log.isEnabledFor(logging.DEBUG):
+                                _log.debug(
+                                    '%s %s has received %s',
+                                    method,
+                                    log_url,
+                                    utils._redact_sensitive_data(data, serialized=isinstance(data, str)),
+                                )
                             return data
 
                         # we are being rate limited
@@ -732,7 +749,7 @@ class HTTPClient:
                                 _log.debug(
                                     '%s %s received a 429 despite having %s remaining requests. This is a sub-ratelimit.',
                                     method,
-                                    url,
+                                    log_url,
                                     ratelimit.remaining,
                                 )
 
@@ -741,18 +758,18 @@ class HTTPClient:
                                 _log.warning(
                                     'We are being rate limited. %s %s responded with 429. Timeout of %.2f was too long, erroring instead.',
                                     method,
-                                    url,
+                                    log_url,
                                     retry_after,
                                 )
                                 raise RateLimited(retry_after)
 
                             fmt = 'We are being rate limited. %s %s responded with 429. Retrying in %.2f seconds.'
-                            _log.warning(fmt, method, url, retry_after)
+                            _log.warning(fmt, method, log_url, retry_after)
 
                             _log.debug(
-                                'Rate limit is being handled by bucket hash %s with %r major parameters',
+                                'Rate limit is being handled by bucket hash %s for %s',
                                 bucket_hash,
-                                route.major_parameters,
+                                log_url,
                             )
 
                             # check if it's a global rate limit

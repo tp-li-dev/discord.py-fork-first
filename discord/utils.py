@@ -673,6 +673,26 @@ else:
     _from_json = json.loads
 
 
+def _redact_sensitive_data(data: Any, *, serialized: bool = False) -> Any:
+    """Make a logging-only projection without changing protocol data."""
+    if serialized:
+        try:
+            parsed = _from_json(data)
+        except (TypeError, ValueError):
+            return data
+        return _to_json(_redact_sensitive_data(parsed))
+    if isinstance(data, dict):
+        return {
+            key: '<redacted>' if key in ('token', 'secret_key') else _redact_sensitive_data(value)
+            for key, value in data.items()
+        }
+    if isinstance(data, list):
+        return [_redact_sensitive_data(value) for value in data]
+    if isinstance(data, tuple):
+        return tuple(_redact_sensitive_data(value) for value in data)
+    return data
+
+
 def _parse_ratelimit_header(request: Any, *, use_clock: bool = False) -> float:
     reset_after: Optional[str] = request.headers.get('X-Ratelimit-Reset-After')
     if use_clock or not reset_after:

@@ -528,7 +528,8 @@ class DiscordWebSocket:
         self.log_receive(msg)
         msg = utils._from_json(msg)
 
-        _log.debug('For Shard ID %s: WebSocket Event: %s', self.shard_id, msg)
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug('For Shard ID %s: WebSocket Event: %s', self.shard_id, utils._redact_sensitive_data(msg))
         event = msg.get('t')
         if event:
             self._dispatch('socket_event_type', event)
@@ -882,7 +883,8 @@ class DiscordVoiceWebSocket:
         pass
 
     async def send_as_json(self, data: Any) -> None:
-        _log.debug('Sending voice websocket frame: %s.', data)
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug('Sending voice websocket frame: %s.', utils._redact_sensitive_data(data))
         await self.ws.send_str(utils._to_json(data))
 
     async def send_binary(self, opcode: int, data: bytes) -> None:
@@ -994,7 +996,8 @@ class DiscordVoiceWebSocket:
         await self.send_as_json(payload)
 
     async def received_message(self, msg: Dict[str, Any]) -> None:
-        _log.debug('Voice websocket frame received: %s', msg)
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug('Voice websocket frame received: %s', utils._redact_sensitive_data(msg))
         op = msg['op']
         data = msg['d']  # According to Discord this key is always given
         self.seq_ack = msg.get('seq', self.seq_ack)  # this key could not be given
