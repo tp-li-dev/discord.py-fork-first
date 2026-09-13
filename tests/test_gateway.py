@@ -29,10 +29,17 @@ import pytest
 import yarl
 
 from discord.gateway import DiscordWebSocket
+from discord import utils
 
 
 @pytest.mark.asyncio
-async def test_gateway_fallback_preserves_query_parameters(monkeypatch):
+@pytest.mark.parametrize('compress', [False, True])
+@pytest.mark.parametrize('compression_type', ['zlib-stream', 'zstd-stream'])
+async def test_gateway_fallback_preserves_query_parameters(monkeypatch, compress, compression_type):
+    class DecompressionContext:
+        COMPRESSION_TYPE = compression_type
+
+    monkeypatch.setattr(utils, '_ActiveDecompressionContext', DecompressionContext)
     urls = []
     socket = SimpleNamespace(closed=False)
 
@@ -80,12 +87,15 @@ async def test_gateway_fallback_preserves_query_parameters(monkeypatch):
     )
     gateway = yarl.URL('wss://resume.example.test/')
 
-    result = await DiscordWebSocket.from_client(client, gateway=gateway, resume=True)
+    result = await DiscordWebSocket.from_client(client, gateway=gateway, resume=True, compress=compress)
 
     assert result.gateway == DiscordWebSocket.DEFAULT_GATEWAY
     assert urls[0].query == urls[1].query
     assert urls[1].query['v'] == '10'
     assert urls[1].query['encoding'] == 'json'
-    assert urls[1].query['compress'] == 'zstd-stream'
+    if compress:
+        assert urls[1].query['compress'] == compression_type
+    else:
+        assert 'compress' not in urls[1].query
     assert identified == [True]
     assert not resumed
