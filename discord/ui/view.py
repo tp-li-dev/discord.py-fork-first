@@ -269,6 +269,8 @@ class BaseView:
                     parent._update_view(self)
                 children.append(item)
                 parents[raw] = item
+                if raw._has_children():
+                    parents.update(zip(raw.walk_children(), item.walk_children()))  # type: ignore
             else:
                 item: Item = raw.__discord_ui_model_type__(**raw.__discord_ui_model_kwargs__)
                 item.callback = _ItemCallback(raw, self, item)  # type: ignore
@@ -278,7 +280,11 @@ class BaseView:
                 setattr(self, raw.__name__, item)
                 parent = getattr(raw, '__discord_ui_parent__', None)
                 if parent:
-                    parents.get(parent, parent)._children.append(item)
+                    parent = parents.get(parent)
+                    if parent is None:
+                        raise ValueError(f'Could not resolve the action row parent for {raw.__name__}')
+                    item._parent = parent
+                    parent._children.append(item)
                     continue
                 children.append(item)
 

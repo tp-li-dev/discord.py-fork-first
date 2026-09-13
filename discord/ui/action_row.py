@@ -175,19 +175,34 @@ class ActionRow(Item[V]):
     def copy(self) -> ActionRow[V]:
         new = copy.copy(self)
         children = []
+        copies = {}
         for child in new._children:
             newch = child.copy()
             newch._parent = new
-            if isinstance(newch.callback, _ItemCallback):
+            if isinstance(newch.callback, _ItemCallback) and newch.callback.parent is self:
                 newch.callback.parent = new
             children.append(newch)
+            copies[id(child)] = newch
         new._children = children
+        names = set(vars(self))
+        names.update(func.__name__ for func in self.__action_row_children_items__)
+        for name in names:
+            value = getattr(self, name)
+            if isinstance(value, Item) and id(value) in copies:
+                setattr(new, name, copies[id(value)])
         new._parent = self._parent
         new._update_view(self.view)
         return new
 
     def __deepcopy__(self, memo) -> ActionRow[V]:
-        return self.copy()
+        new = self.copy()
+        memo[id(self)] = new
+        new._parent = memo.get(id(self._parent), self._parent)
+        for child, newch in zip(self._children, new._children):
+            memo[id(child)] = newch
+            if isinstance(newch.callback, _ItemCallback):
+                newch.callback.parent = memo.get(id(newch.callback.parent), newch.callback.parent)
+        return new
 
     def _has_children(self):
         return True

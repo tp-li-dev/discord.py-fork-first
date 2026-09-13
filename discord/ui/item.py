@@ -211,7 +211,9 @@ class Item(Generic[V]):
         self._parent = None
 
     def copy(self) -> Self:
-        return copy.deepcopy(self)
+        # A copied subtree still belongs to the same external view and parent.
+        # Do not copy their state (which may include running tasks).
+        return copy.deepcopy(self, {id(self._view): self._view, id(self._parent): self._parent})
 
     def _has_children(self) -> bool:
         return False

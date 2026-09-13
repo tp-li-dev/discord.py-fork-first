@@ -271,8 +271,10 @@ class BaseSelect(Item[V]):
 
     def copy(self) -> Self:
         new = copy.copy(self)
+        new._underlying = copy.deepcopy(self._underlying)
+        new._values = self._values.copy()
         if isinstance(new.callback, _ItemCallback):
-            new.callback.item = new
+            new.callback = _ItemCallback(new.callback.callback, new.callback.parent, new)  # type: ignore
         new._parent = self._parent
         new._update_view(self.view)
         return new

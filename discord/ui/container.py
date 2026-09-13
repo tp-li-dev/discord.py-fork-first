@@ -145,6 +145,8 @@ class Container(Item[V]):
                 setattr(self, name, item)
                 children.append(item)
                 parents[raw] = item
+                if raw._has_children():
+                    parents.update(zip(raw.walk_children(), item.walk_children()))  # type: ignore
             else:
                 # action rows can be created inside containers, and then callbacks can exist here
                 # so we create items based off them
@@ -157,7 +159,11 @@ class Container(Item[V]):
                 parent = getattr(raw, '__discord_ui_parent__', None)
                 if parent is None:
                     raise ValueError(f'{raw.__name__} is not a valid item for a Container')
-                parents.get(parent, parent)._children.append(item)
+                parent = parents.get(parent)
+                if parent is None:
+                    raise ValueError(f'Could not resolve the action row parent for {raw.__name__}')
+                item._parent = parent
+                parent._children.append(item)
                 # we do not append it to the children list because technically these buttons and
                 # selects are not from the container but the action row itself.
 
@@ -183,10 +189,9 @@ class Container(Item[V]):
         return True
 
     def copy(self) -> Container[V]:
-        new = copy.deepcopy(self)
+        new = super().copy()
         for child in new._children:
-            newch = child.copy()
-            newch._parent = new
+            child._parent = new
         new._parent = self._parent
         new._update_view(self.view)
         return new

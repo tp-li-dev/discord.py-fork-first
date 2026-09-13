@@ -305,12 +305,17 @@ class Button(Item[V]):
             id=self.id,
         )
         if isinstance(new.callback, _ItemCallback):
-            new.callback.item = new
+            new.callback = _ItemCallback(new.callback.callback, new.callback.parent, new)  # type: ignore
         new._update_view(self.view)
         return new
 
     def __deepcopy__(self, memo) -> Self:
-        return self.copy()
+        new = self.copy()
+        memo[id(self)] = new
+        new._parent = memo.get(id(self._parent), self._parent)
+        if isinstance(new.callback, _ItemCallback):
+            new.callback.parent = memo.get(id(new.callback.parent), new.callback.parent)
+        return new
 
 
 def button(
