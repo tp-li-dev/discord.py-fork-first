@@ -282,14 +282,8 @@ class PollAnswer:
         if not self._message or not self._state:  # Make type checker happy
             raise ClientException('You cannot fetch users to a poll not sent with a message')
 
-        if limit is None:
-            if not self._message.poll:
-                limit = 100
-            else:
-                limit = self.vote_count or 100
-
-        while limit > 0:
-            retrieve = min(limit, 100)
+        while limit is None or limit > 0:
+            retrieve = 100 if limit is None else min(limit, 100)
 
             message = self._message
             guild = self._message.guild
@@ -305,7 +299,8 @@ class PollAnswer:
                 # No more voters to fetch, terminate loop
                 break
 
-            limit -= len(users)
+            if limit is not None:
+                limit -= len(users)
             after = Object(id=int(users[-1]['id']))
 
             if not guild or isinstance(guild, Object):
@@ -582,7 +577,9 @@ class Poll:
             The copy of the poll.
         """
 
-        new = self.__class__(question=self.question, duration=self.duration)
+        new = self.__class__(
+            question=self.question, duration=self.duration, multiple=self.multiple, layout_type=self.layout_type
+        )
 
         # We want to return a stateless copy of the poll, so we should not
         # override new._answers as our answers may contain a state
